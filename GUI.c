@@ -16,7 +16,9 @@ void GUI_ADD_BUTTON (struct Button* IB);
 void GUI_Draw();
 void GUI_INIT();
 void GUI_HANDLE();
-void GUI_SELECT_MENUE(char*ButtonsText[],int ButtonCountIN,void(**calls)(void),uint8_t SCsize);
+void GUI_SELECT_MENUE_VERTICAL(char*ButtonsText[],int ButtonCountIN,void(**calls)(void),uint8_t SCsize);
+void GUI_SELECT_MENUE_VERTICAL_XYS(char*ButtonsText[],int ButtonCountIN,void(**calls)(void),uint8_t SCsize,int SX,int SY,int maxbuttonlength);
+
 struct Button;
 struct Button{
     uint16_t posx;
@@ -104,19 +106,12 @@ void GUI_Draw(){
             tx =  CGUISC.Buttons[i].posx;
             gfx_SetColor(CGUISC.Buttons[i].BackColour);
             gfx_SetTextBGColor(CGUISC.Buttons[i].BackColour);
-        }
-        
-        ty =  CGUISC.Buttons[i].posy;
-        gfx_FillRectangle(tx-5*CGUISC.Buttons[i].scaling, ty-5*CGUISC.Buttons[i].scaling, CGUISC.Buttons[i].buttonlength+3,15*CGUISC.Buttons[i].scaling);
-       // Fill(Background,tx-10,ty-10,tx+Buttons[i].buttonlength+3,ty+10); 
-       // Foreground = Buttons[i].TextColour;
-       // Text_Transparent = true; 
-        
+        }        
+         ty =  CGUISC.Buttons[i].posy;
+         gfx_FillRectangle(tx-5*CGUISC.Buttons[i].scaling, ty-5*CGUISC.Buttons[i].scaling, CGUISC.Buttons[i].buttonlength+3,15*CGUISC.Buttons[i].scaling);
          gfx_SetTextFGColor(CGUISC.Buttons[i].TextColour);
          gfx_SetTextScale(CGUISC.Buttons[i].scaling,CGUISC.Buttons[i].scaling);
          gfx_PrintStringXY( CGUISC.Buttons[i].Text,tx,ty);
-        //DrawText(Buttons[i].Text,tx,ty);
-       // Text_Transparent = false;
     }
 }
 
@@ -153,28 +148,18 @@ void GUI_Clear(){
     GUI_ACTIVE = false;
 }
 
-
-
 struct Button B_TEMP;
-void GUI_SELECT_MENUE(char*ButtonsText[],int ButtonCountIN,void(**calls)(void),uint8_t SCsize){
-    int bcounta = 0;
+
+void GUI_SELECT_MENUE_VERTICAL_XYS(char*ButtonsText[],int ButtonCountIN,void(**calls)(void),uint8_t SCsize,int SX,int SY,int maxbuttonlength){
+  int bcounta = 0;
     int i = 0;
-    int maxbuttonlength = 0;
     int temp = 0;
     CGUISC.OPTIONSENTER = calls;
   //Initialise GUI  
     GUI_INIT();
- //Determine maximal Button length 
-    for(i = 0;i<ButtonCountIN;i++){
-        temp = strlen(ButtonsText[i]);     
-        if(temp>maxbuttonlength){
-            maxbuttonlength = temp;
-        }
-    }
-   
     while(bcounta<ButtonCountIN){
-        B_TEMP.posx = 320/2-(maxbuttonlength*9*SCsize)/2;
-        B_TEMP.posy =  240/2-(ButtonCountIN*25/2)+20*bcounta*SCsize;
+        B_TEMP.posx = SX;
+        B_TEMP.posy =  SY+20*bcounta*SCsize;
         B_TEMP.Text = ButtonsText[bcounta];
         B_TEMP.BackColour = CGUISC.buttonback;
         B_TEMP.SelectColour = CGUISC.buttonselect;
@@ -184,5 +169,17 @@ void GUI_SELECT_MENUE(char*ButtonsText[],int ButtonCountIN,void(**calls)(void),u
          GUI_ADD_BUTTON(&B_TEMP);
          bcounta++;
     }
-    GUI_HANDLE();
+}
+void GUI_SELECT_MENUE_VERTICAL(char*ButtonsText[],int ButtonCountIN,void(**calls)(void),uint8_t SCsize){
+    int maxbuttonlength = 0;
+    int i = 0;
+    int temp = 0;
+  //Determine Maximum Button Length
+    for(i = 0;i<ButtonCountIN;i++){
+        temp = strlen(ButtonsText[i]);     
+        if(temp>maxbuttonlength){
+            maxbuttonlength = temp;
+        }
+    }
+   GUI_SELECT_MENUE_VERTICAL_XYS(ButtonsText,ButtonCountIN,calls,SCsize,(320/2-(maxbuttonlength*9*SCsize)/2),(240/2-(ButtonCountIN*25/2)),maxbuttonlength);     
 }
