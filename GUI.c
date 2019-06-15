@@ -1,3 +1,6 @@
+#ifndef GUI_C
+#define GUI_C
+
 #include "GUI.h"
 void GUI_INIT(){
      int i = 0;
@@ -27,7 +30,7 @@ void GUI_INIT(){
         B = (i & 3 )<<6;
         gfx_palette[192+i] = gfx_RGBTo1555(R,G,B);
     }
-     GUI_STYLE_GRAYSCALE();//Default style
+   GUI_STYLE_MODERN();//Default style
 }
 
 void GUI_STYLE_GRAYSCALE(){
@@ -38,7 +41,14 @@ void GUI_STYLE_GRAYSCALE(){
      CGUISC.LABELTEXT = 9;
      CGUISC.LABELBACK = 2; 
 }
-
+void GUI_STYLE_MODERN(){
+     CGUISC.backcol = 0;
+     CGUISC.textcol = 9;
+     CGUISC.buttonback = 3;
+     CGUISC.buttonselect = 1;
+     CGUISC.LABELTEXT = 9;
+     CGUISC.LABELBACK = 2; 
+}
 void GUI_ADD_BUTTON(struct Button* IB){
     if( CGUISC.Buttoncount>0){
  CGUISC.Buttons = realloc( CGUISC.Buttons,sizeof(struct Button)*( CGUISC.Buttoncount+1));
@@ -163,6 +173,7 @@ void GUI_Draw(){
     GUI_DRAW_LABELS();
 }
 void GUI_HANDLE(){
+    int i;
    struct GUISC backupSC;
     GUI_Draw();
  while(GUI_ACTIVE){
@@ -171,6 +182,16 @@ switch(keycodeC){
       case 10:
         GUI_Clear();
       return;
+     case 1:
+for(i = 0;i<11;i++){
+    SelectButton(true);
+}
+     break;
+     case 2:
+for(i = 0;i<11;i++){
+    SelectButton(false);
+}
+     break;  
       case 4:
         SelectButton(true);
       break;
@@ -205,8 +226,14 @@ void GUI_SELECT_MENUE_VERTICAL_XYS(char*ButtonsText[],int ButtonCountIN,void(**c
     int temp = 0;
     CGUISC.OPTIONSENTER = calls; 
     while(bcounta<ButtonCountIN){
-        B_TEMP.posx = SX;
+       
+       if(bcounta < (11/SCsize) ){
+        B_TEMP.posx = SX;       
         B_TEMP.posy =  SY+20*bcounta*SCsize;
+       }else{
+         B_TEMP.posx = SX+150;       
+         B_TEMP.posy =  SY+20*(bcounta-(11/SCsize))*SCsize;
+       }
         B_TEMP.Text = ButtonsText[bcounta];
         B_TEMP.BackColour = CGUISC.buttonback;
         B_TEMP.SelectColour = CGUISC.buttonselect;
@@ -230,6 +257,35 @@ void GUI_SELECT_MENUE_VERTICAL(char*ButtonsText[],int ButtonCountIN,void(**calls
     }
    GUI_SELECT_MENUE_VERTICAL_XYS(ButtonsText,ButtonCountIN,calls,SCsize,(320/2-(maxbuttonlength*9*SCsize)/2),(240/2-(ButtonCountIN*25/2)),maxbuttonlength);     
 }
+/*
+struct Image GUI_Get_Image(char* key){
+    struct Image ret;
+    ti_var_t ImageFile;
+    ti_CloseAll();
+    
+    ImageFile =  ti_Open(key, "r");
+    ti_Read(ret.resx, 2, 1,  ImageFile);//0 1
+    ti_Read(ret.resy, 2, 1,  ImageFile);//2 3
+    ti_Read(ret.type, 1, 1,  ImageFile);//4
+  switch(ret.type){
+      case 0:
+       ret.data = malloc(ret.resx*ret.resy);
+       ti_Read(ret.data,ret.resx*ret.resy,1,ImageFile);
+     break;
+    case 1:
+        ret.data = malloc((ret.resx*ret.resy)/8 + 1);
+        if((ret.resx*ret.resy)%8 !=0){
+            ti_Read(ret.data,(ret.resx*ret.resy)/8 + 1,1,ImageFile);
+        }else{
+            ti_Read(ret.data,(ret.resx*ret.resy)/8,1,ImageFile);
+        }
+    break;
+   }
+return(ret);
+} 
+*/
+
+
 
 void GUI_DRAW_IMAGE(struct Image* IM,uint16_t x,uint16_t y){
 int rowy;
@@ -240,6 +296,9 @@ char* dat;
 uint16_t re;
 int X;
 int Y;
+ int start;
+ char*c;
+rowy = 0;
 switch(IM->type){
     case 0:
  size = IM->resx;
@@ -265,5 +324,63 @@ for(X=0;X<IM->resx;X++){
 }   
 }
 break;
+case 2:
+X=0;
+Y=0;
+   c = IM->data;
+   gfx_SetColor(2);
+    gfx_FillRectangle(x,y,IM->resx,IM->resy);
+    start = X;
+    while(*c!=0){     
+            if(X>IM->resx-10){
+                 X = start;
+                 Y += 8;
+            }
+            if(Y>IM->resy-10){
+                return;
+            }
+switch(*c){
+    case '\n':
+    Y += 8;
+    X = (start-8);
+    break;
+   case 9:
+    X += 24;
+    break;
+    case 'Ä':
+    GUI_DrawChar('A',X+x,Y+y);
+    break;
+    case 'ä':
+    GUI_DrawChar('a',X+x,Y+y);
+    break;
+    case 'Ö':
+    GUI_DrawChar('O',X+x,Y+y);
+    break;
+    case 'ö':
+    GUI_DrawChar('o',X+x,Y+y);
+    break;
+    case 'Ü':
+    GUI_DrawChar('U',X+x,Y+y);
+    break;
+    case 'ü':
+    GUI_DrawChar('u',X+x,Y+y);
+    break;
+    default:
+        GUI_DrawChar(*c,X+x,Y+y);
+    break;
+}
+        c++;
+        X += 8;
+    }
+    
+break;
 }
 }
+
+void GUI_DrawChar(char c,int x,int y){
+    gfx_SetTextXY(x,y);
+    gfx_SetTextBGColor(2);
+    gfx_SetTextFGColor(9);
+    gfx_PrintChar(c);
+}
+#endif

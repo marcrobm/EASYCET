@@ -17,6 +17,7 @@ void GUI_Draw();
 void GUI_HANDLE();
 void GUI_Clear();
 char colourindex(char r,char g,char b);
+void GUI_DrawChar(char c,int x,int y);
 //Buttons
 struct Button;
 void GUI_DRAW_BUTTONS();
@@ -33,7 +34,7 @@ void GUI_SELECT_MENUE_VERTICAL_XYS(char*ButtonsText[],int ButtonCountIN,void(**c
 //Styles
 
 void GUI_STYLE_GRAYSCALE();
-
+void GUI_STYLE_MODERN();
 struct Button{
     uint16_t posx;
     uint16_t posy;
